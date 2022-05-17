@@ -129,6 +129,8 @@ dmypy.json
 .pyre/
 
 .idea/
+artifacts
+cache
 node_modules
 hardhat/artifacts
 hardhat/cache

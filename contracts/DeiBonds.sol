@@ -200,7 +200,8 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         );
         soldBond -= bond.amount;
         bonds[bondId].amount = 0;
-        uint256 escapeAmount = IEscapeBond(escapeBondCalculator).getEscapeAmount(bondId, nft);
+        uint256 escapeAmount = IEscapeBond(escapeBondCalculator)
+            .getEscapeAmount(bondId, nft);
         IERC20(entryToken).safeTransfer(msg.sender, escapeAmount);
         emit EscapeBond(bondId);
     }
@@ -224,7 +225,10 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         soldBond -= bondAmount;
         bonds[bondId].amount = 0;
         uint256 exitTokenAmount;
-        if (IERC20Metadata(entryToken).decimals() < IERC20Metadata(exitToken).decimals()) {
+        if (
+            IERC20Metadata(entryToken).decimals() <
+            IERC20Metadata(exitToken).decimals()
+        ) {
             uint256 pow = IERC20Metadata(exitToken).decimals() -
                 IERC20Metadata(entryToken).decimals();
             exitTokenAmount = bondAmount * 10**pow;
@@ -239,7 +243,11 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
 
     /* ========== VIEWS ========== */
 
-    function bondsOfOwner(address user) external view returns (Bond[] memory) {
+    function bondsOfOwner(address user)
+        external
+        view
+        returns (Bond[] memory, uint256[] memory)
+    {
         uint256[] memory tokens = BondNFT(nft).tokensOf(user);
         Bond[] memory bondsOfUser = new Bond[](tokens.length);
         uint256 j = 0;
@@ -248,7 +256,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
                 bondsOfUser[j++] = bonds[tokens[i]];
             }
         }
-        return bondsOfUser;
+        return (bondsOfUser, tokens);
     }
 
     function getApy() external view returns (uint256 apyValue) {
