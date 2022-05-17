@@ -23,9 +23,9 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./interfaces/IOracle.sol";
-import "../interfaces/IMuonV02.sol";
-import "../interfaces/IUniswapV2Pair.sol";
-import "../interfaces/IUniswapV2Router02.sol";
+import "./interfaces/IMuonV02.sol";
+import "./interfaces/IUniswapV2Pair.sol";
+import "./interfaces/IUniswapV2Router02.sol";
 
 /// @title Oracle Contract
 /// @author DEUS Finance

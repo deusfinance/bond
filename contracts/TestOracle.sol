@@ -22,7 +22,7 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./interfaces/IOracle.sol";
-import "../interfaces/IMuonV02.sol";
+import "./interfaces/IMuonV02.sol";
 
 /// @title Oracle Contract
 /// @author DEUS Finance
