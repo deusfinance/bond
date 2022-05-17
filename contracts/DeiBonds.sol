@@ -30,6 +30,9 @@ import "./interfaces/IPrematurityExit.sol";
 import "./interfaces/IDeiBonds.sol";
 import "./BondNFT.sol";
 
+/// @title dei bonds
+/// @author Kazem Ghareghani
+/// @notice user can buy dei bonds and eran rewards
 contract DeiBonds is
     IDeiBonds,
     AccessControlEnumerable,
@@ -98,26 +101,36 @@ contract DeiBonds is
         payable(msg.sender).transfer(amount);
     }
 
+    /// @notice set cap
+    /// @param cap new value
     function setCap(uint256 cap) external onlyRole(TRUSTY_ROLE) {
         emit SetCap(capacity, cap);
         capacity = cap;
     }
 
+    /// @notice set sold amount
+    /// @param soldAmount_ new value
     function setSoldAmount(uint256 soldAmount_) external onlyRole(TRUSTY_ROLE) {
         emit SetSoldAmount(soldAmount, soldAmount_);
         soldAmount = soldAmount_;
     }
 
+    /// @notice set oracle
+    /// @param oracle_ new value
     function setOracle(address oracle_) external onlyRole(TRUSTY_ROLE) {
         emit SetOracle(oracle, oracle_);
         oracle = oracle_;
     }
 
+    /// @notice set NFT
+    /// @param nft_ new value
     function setNFT(address nft_) public onlyRole(TRUSTY_ROLE) {
         emit SetNft(nft, nft_);
         nft = nft_;
     }
 
+    /// @notice set Apy Calculator
+    /// @param apyCalculator_ new value
     function setApyCalculator(address apyCalculator_)
         public
         onlyRole(TRUSTY_ROLE)
@@ -126,6 +139,8 @@ contract DeiBonds is
         apyCalculator = apyCalculator_;
     }
 
+    /// @notice set Pre Maturity Exit Calculator
+    /// @param preMaturityExitCalculator_ new value
     function setPreMaturityExitCalculator(address preMaturityExitCalculator_)
         public
         onlyRole(TRUSTY_ROLE)
@@ -137,6 +152,8 @@ contract DeiBonds is
         preMaturityExitCalculator = preMaturityExitCalculator_;
     }
 
+    /// @notice Set claim interval
+    /// @param claimInterval_ new value
     function setClaimInterval(uint256 claimInterval_)
         public
         onlyRole(TRUSTY_ROLE)
@@ -157,6 +174,8 @@ contract DeiBonds is
 
     /* ========== EXTERNAL FUNCTIONS ========== */
 
+    /// @notice User can claim deus as a reward
+    /// @param bondId id of bond nft token
     function claim(uint256 bondId) external whenNotPaused nonReentrant {
         address owner = BondNFT(nft).ownerOf(bondId);
         require(owner == msg.sender, "DeiBond: SENDER_IS_NOT_BOND_OWNER");
@@ -172,6 +191,9 @@ contract DeiBonds is
         emit Claim(msg.sender, bondId, deusAmount);
     }
 
+    /// @notice User can buy bond with this function
+    /// @param amount amount of entry token
+    /// @param minApy min apy that user want
     function buyBond(uint256 amount, uint256 minApy)
         external
         whenNotPaused
@@ -196,6 +218,8 @@ contract DeiBonds is
         emit BuyBond(msg.sender, amount, id);
     }
 
+    /// @notice user can withdraw amount before bond matured
+    /// @param bondId id of bond nft token
     function prematureWithdraw(uint256 bondId)
         external
         whenNotPaused
@@ -226,6 +250,8 @@ contract DeiBonds is
         );
     }
 
+    /// @notice user can exit after bond matured
+    /// @param bondId id of bond nft token
     function maturityExit(uint256 bondId) external whenNotPaused nonReentrant {
         address owner = BondNFT(nft).ownerOf(bondId);
         require(owner == msg.sender, "DeiBond: SENDER_IS_NOT_BOND_OWNER");
@@ -257,6 +283,10 @@ contract DeiBonds is
 
     /* ========== VIEWS ========== */
 
+    /// @notice get list of bonds of a user
+    /// @param user address of user
+    /// @return bonds lsit of bonds object
+    /// @return tokens lsit of nft ids
     function bondsOfOwner(address user)
         external
         view
@@ -273,10 +303,16 @@ contract DeiBonds is
         return (bondsOfUser, tokens);
     }
 
+    /// @notice returns apy for bond
+    /// @return apyValue apy in 18 decimals
     function getApy() external view returns (uint256 apyValue) {
         apyValue = IApy(apyCalculator).getApy();
     }
 
+    /// @notice computes deus amount can be claimed
+    /// @param bondId id of bond nft token
+    /// @param deusPrice price of deus in 18 decimals
+    /// @return deusAmount deus amount can be claimed
     function claimableDeus(uint256 bondId, uint256 deusPrice)
         public
         view
