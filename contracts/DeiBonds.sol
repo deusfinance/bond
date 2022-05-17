@@ -58,7 +58,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         address entryToken_,
         address nft_,
         address apyCalculator_,
-        address preMaturityExitCalculator_,
+        address preMaturityExitCalculator_, // Note: unused variable ?
         address oracle_,
         uint256 capacity_
     ) {
@@ -92,17 +92,17 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         payable(msg.sender).transfer(amount);
     }
 
-    function setCap(uint256 cap) public onlyRole(TRUSTY_ROLE) {
+    function setCap(uint256 cap) external onlyRole(TRUSTY_ROLE) {
         emit SetCap(capacity, cap);
         capacity = cap;
     }
 
-    function setSoldBond(uint256 soldBond_) public onlyRole(TRUSTY_ROLE) {
+    function setSoldBond(uint256 soldBond_) external onlyRole(TRUSTY_ROLE) {
         emit SetSoldBond(soldBond, soldBond_);
         soldBond = soldBond_;
     }
 
-    function setOracle(address oracle_) public onlyRole(TRUSTY_ROLE) {
+    function setOracle(address oracle_) external onlyRole(TRUSTY_ROLE) {
         emit SetOracle(oracle, oracle_);
         oracle = oracle_;
     }
@@ -152,25 +152,27 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
     /* ========== EXTERNAL FUNCTIONS ========== */
 
     function claim(uint256 bondId) external whenNotPaused {
+        // Note: use reentrancyGuard
         address owner = BondNFT(nft).ownerOf(bondId);
-        require(owner == msg.sender, "DeiBond: SENDER IS NOT BOND OWNER");
+        require(owner == msg.sender, "DeiBond: SENDER_IS_NOT_BOND_OWNER");
         require(
             BondNFT(nft).bondContract(bondId) == address(this),
-            "DeiBond: NFT IS NOT SUPPORTED"
+            "DeiBond: NFT_IS_NOT_SUPPORTED"
         );
         uint256 deusPrice = IOracle(oracle).getPrice();
         uint256 deusAmount = claimableDeus(bondId, deusPrice);
-        require(deusAmount > 0, "DeiBond: CLAIM AMOUNT IS ZERO");
+        require(deusAmount > 0, "DeiBond: CLAIM_AMOUNT_IS_ZERO");
         bonds[bondId].lastClaimTimestamp = block.timestamp;
         IERC20(deus).safeTransfer(msg.sender, deusAmount);
         emit Claim(bondId, deusAmount);
     }
 
     function buyBond(uint256 amount, uint256 minApy) external whenNotPaused {
-        require(amount + soldBond <= capacity, "DeiBond: THERE IS NO CAP");
+        // Note: use reentracyGuard
+        require(amount + soldBond <= capacity, "DeiBond: THERE_IS_NO_CAP");
         require(
             minApy <= IApy(apyCalculator).getApy(),
-            "DeiBond: INSUFFICIENT APY"
+            "DeiBond: INSUFFICIENT_APY"
         );
         IERC20(entryToken).transferFrom(msg.sender, address(this), amount);
         uint256 id = BondNFT(nft).mint(msg.sender, address(this));
@@ -188,15 +190,15 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
 
     function prematureWithdraw(uint256 bondId) external whenNotPaused {
         address owner = BondNFT(nft).ownerOf(bondId);
-        require(owner == msg.sender, "DeiBond: SENDER IS NOT BOND OWNER");
+        require(owner == msg.sender, "DeiBond: SENDER_IS_NOT_BOND_OWNER");
         require(
             BondNFT(nft).bondContract(bondId) == address(this),
-            "DeiBond: NFT NOT SUPPORTED"
+            "DeiBond: NFT_NOT_SUPPORTED"
         );
         Bond memory bond = bonds[bondId];
         require(
             bond.duration + bond.startTime > block.timestamp,
-            "DeiBond: BOND IS EXPIRED"
+            "DeiBond: BOND_IS_EXPIRED"
         );
         soldBond -= bond.amount;
         bonds[bondId].amount = 0;
@@ -208,35 +210,29 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
 
     function maturityExit(uint256 bondId) external whenNotPaused {
         address owner = BondNFT(nft).ownerOf(bondId);
-        require(owner == msg.sender, "DeiBond: SENDER IS NOT BOND OWNER");
+        require(owner == msg.sender, "DeiBond: SENDER_IS_NOT_BOND_OWNER");
         require(
             BondNFT(nft).bondContract(bondId) == address(this),
-            "DeiBond: NFT NOT SUPPORTED"
+            "DeiBond: NFT_NOT_SUPPORTED"
         );
         Bond memory bond = bonds[bondId];
         require(
             bond.duration + bond.startTime < block.timestamp,
-            "DeiBond: BOND IS NOT EXPIRED"
+            "DeiBond: BOND_IS_NOT_EXPIRED"
         );
         uint256 deusPrice = IOracle(oracle).getPrice();
         uint256 deusAmount = claimableDeus(bondId, deusPrice);
-        require(deusAmount == 0, "DeiBond: DID NOT CLAIM YET");
+        require(deusAmount == 0, "DeiBond: NOT_CLAIMED_YET");
         uint256 bondAmount = bond.amount;
         soldBond -= bondAmount;
         bonds[bondId].amount = 0;
         uint256 exitTokenAmount;
-        if (
-            IERC20Metadata(entryToken).decimals() <
-            IERC20Metadata(exitToken).decimals()
-        ) {
-            uint256 pow = IERC20Metadata(exitToken).decimals() -
-                IERC20Metadata(entryToken).decimals();
-            exitTokenAmount = bondAmount * 10**pow;
-        } else {
-            uint256 pow = IERC20Metadata(entryToken).decimals() -
-                IERC20Metadata(exitToken).decimals();
-            exitTokenAmount = bondAmount / 10**pow;
-        }
+        uint256 entryDecimal = IERC20Metadata(entryToken).decimals();
+        uint256 exitDecimal = IERC20Metadata(exitToken).decimals();
+        uint256 pow = entryDecimal < exitDecimal
+            ? exitDecimal - entryDecimal
+            : entryDecimal - exitDecimal;
+        exitTokenAmount = bondAmount / 10**pow;
         IERC20(exitToken).safeTransfer(msg.sender, exitTokenAmount);
         emit MaturityExitBond(bondId);
     }
@@ -269,13 +265,10 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         returns (uint256 deusAmount)
     {
         Bond memory bond = bonds[bondId];
-        uint256 currentTimestamp;
         uint256 endTimestamp = bond.startTime + bond.duration;
-        if (block.timestamp > endTimestamp) {
-            currentTimestamp = endTimestamp;
-        } else {
-            currentTimestamp = block.timestamp;
-        }
+        uint256 currentTimestamp = block.timestamp > endTimestamp
+            ? endTimestamp
+            : block.timestamp;
         uint256 numberOfClaims = (currentTimestamp - bond.startTime) /
             claimInterval -
             (bond.lastClaimTimestamp - bond.startTime) /
