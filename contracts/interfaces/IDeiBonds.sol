@@ -17,8 +17,8 @@ interface IDeiBonds {
     event SetApyCalculator(address oldValue, address newValue);
     event SetPreMaturityExitCalculator(address oldValue, address newValue);
     event SetClaimInterval(uint256 oldValue, uint256 newValue);
-    event Claim(uint256 bondId, uint256 claimAmount);
-    event BuyBond(uint256 bondId);
-    event MaturityExitBond(uint256 bondId);
-    event PrematureWithdraw(uint256 bondId);
+    event Claim(address user, uint256 bondId, uint256 claimAmount);
+    event BuyBond(address user, uint256 bondAmount, uint256 bondId);
+    event MaturityExitBond(address user, uint256 bondAmount, uint256 bondId);
+    event PrematureWithdraw(address user, uint256 bondAmount, uint256 withdrawAmount, uint256 bondId);
 }

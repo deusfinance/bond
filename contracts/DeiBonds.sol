@@ -153,7 +153,6 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
     /* ========== EXTERNAL FUNCTIONS ========== */
 
     function claim(uint256 bondId) external whenNotPaused nonReentrant {
-        // Note: use reentrancyGuard
         address owner = BondNFT(nft).ownerOf(bondId);
         require(owner == msg.sender, "DeiBond: SENDER_IS_NOT_BOND_OWNER");
         require(
@@ -165,11 +164,10 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
         require(deusAmount > 0, "DeiBond: CLAIM_AMOUNT_IS_ZERO");
         bonds[bondId].lastClaimTimestamp = block.timestamp;
         IERC20(deus).safeTransfer(msg.sender, deusAmount);
-        emit Claim(bondId, deusAmount);
+        emit Claim(msg.sender, bondId, deusAmount);
     }
 
     function buyBond(uint256 amount, uint256 minApy) external whenNotPaused nonReentrant {
-        // Note: use reentracyGuard
         require(amount + soldBond <= capacity, "DeiBond: THERE_IS_NO_CAP");
         require(
             minApy <= IApy(apyCalculator).getApy(),
@@ -186,7 +184,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
         );
         soldBond += amount;
         bonds[id] = bond;
-        emit BuyBond(id);
+        emit BuyBond(msg.sender,amount, id);
     }
 
     function prematureWithdraw(uint256 bondId) external whenNotPaused nonReentrant {
@@ -201,12 +199,13 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
             bond.duration + bond.startTime > block.timestamp,
             "DeiBond: BOND_IS_EXPIRED"
         );
-        soldBond -= bond.amount;
+        uint256 bondAmount = bond.amount;
+        soldBond -= bondAmount;
         bonds[bondId].amount = 0;
-        uint256 escapeAmount = IPrematurityExit(preMaturityExitCalculator)
+        uint256 preMaturityAmount = IPrematurityExit(preMaturityExitCalculator)
             .getPrematurityAmount(bondId, nft);
-        IERC20(entryToken).safeTransfer(msg.sender, escapeAmount);
-        emit PrematureWithdraw(bondId);
+        IERC20(entryToken).safeTransfer(msg.sender, preMaturityAmount);
+        emit PrematureWithdraw(msg.sender, bondAmount, preMaturityAmount, bondId);
     }
 
     function maturityExit(uint256 bondId) external whenNotPaused nonReentrant {
@@ -235,7 +234,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
             : entryDecimal - exitDecimal;
         exitTokenAmount = bondAmount / 10**pow;
         IERC20(exitToken).safeTransfer(msg.sender, exitTokenAmount);
-        emit MaturityExitBond(bondId);
+        emit MaturityExitBond(msg.sender, bondAmount, bondId);
     }
 
     /* ========== VIEWS ========== */

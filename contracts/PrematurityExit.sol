@@ -25,9 +25,8 @@ contract PrematurityExit is AccessControl, IPrematurityExit {
     /* ========== ROLES ========== */
     bytes32 public constant TRSUTY_ROLE = keccak256("TRSUTY_ROLE");
 
-    constructor(address admin, address trusty) {
+    constructor(address admin) {
         _setupRole(DEFAULT_ADMIN_ROLE, admin);
-        _setupRole(TRSUTY_ROLE, trusty);
     }
 
     function getPrematurityAmount(uint256 bondId, address nft)
@@ -35,6 +34,6 @@ contract PrematurityExit is AccessControl, IPrematurityExit {
         view
         returns (uint256)
     {
-        return 1;
+        revert();
     }
 }
