@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.13;
-import "../../interfaces/IMuonV02.sol";
+import "./IMuonV02.sol";
 
 interface IOracle {
     struct Signature {
