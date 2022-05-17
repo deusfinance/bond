@@ -19,9 +19,9 @@
 pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/Iapy.sol";
+import "./interfaces/IApy.sol";
 
-contract BondAPY is AccessControl, Iapy {
+contract BondAPY is AccessControl, IApy {
     /* ========== ROLES ========== */
     bytes32 public constant TRSUTY_ROLE = keccak256("TRSUTY_ROLE");
 

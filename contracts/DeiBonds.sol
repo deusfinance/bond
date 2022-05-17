@@ -22,6 +22,7 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./interfaces/IOracle.sol";
 import "./interfaces/IApy.sol";
 import "./interfaces/IEscapeBond.sol";
@@ -199,7 +200,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         );
         soldBond -= bond.amount;
         bonds[bondId].amount = 0;
-        uint256 escapeAmount = IEscapeBond(bondId).getEscapeAmount(bondId, nft);
+        uint256 escapeAmount = IEscapeBond(escapeBondCalculator).getEscapeAmount(bondId, nft);
         IERC20(entryToken).safeTransfer(msg.sender, escapeAmount);
         emit EscapeBond(bondId);
     }
@@ -223,13 +224,13 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         soldBond -= bondAmount;
         bonds[bondId].amount = 0;
         uint256 exitTokenAmount;
-        if (IERC20(fromToken).decimals() < IERC20(exitToken).decimals()) {
-            uint256 pow = IERC20(exitToken).decimals() -
-                IERC20(fromToken).decimals();
+        if (IERC20Metadata(entryToken).decimals() < IERC20Metadata(exitToken).decimals()) {
+            uint256 pow = IERC20Metadata(exitToken).decimals() -
+                IERC20Metadata(entryToken).decimals();
             exitTokenAmount = bondAmount * 10**pow;
         } else {
-            uint256 pow = IERC20(fromToken).decimals() -
-                IERC20(exitToken).decimals();
+            uint256 pow = IERC20Metadata(entryToken).decimals() -
+                IERC20Metadata(exitToken).decimals();
             exitTokenAmount = bondAmount / 10**pow;
         }
         IERC20(exitToken).safeTransfer(msg.sender, exitTokenAmount);
@@ -276,7 +277,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
             (totalClaims * 1e18);
         deusAmount =
             (claimableDeusValue *
-                (10**(18 - IERC20(fromToken).decimals())) *
+                (10**(18 - IERC20Metadata(entryToken).decimals())) *
                 1e18) /
             deusPrice;
     }
