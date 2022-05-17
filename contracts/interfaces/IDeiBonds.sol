@@ -15,10 +15,10 @@ interface IDeiBonds {
     event SetOracle(address oldValue, address newValue);
     event SetNft(address oldValue, address newValue);
     event SetApyCalculator(address oldValue, address newValue);
-    event SetEscapeBondCalculator(address oldValue, address newValue);
+    event SetPreMaturityExitCalculator(address oldValue, address newValue);
     event SetClaimInterval(uint256 oldValue, uint256 newValue);
     event Claim(uint256 bondId, uint256 claimAmount);
     event BuyBond(uint256 bondId);
-    event ExitBond(uint256 bondId);
-    event EscapeBond(uint256 bondId);
+    event MaturityExitBond(uint256 bondId);
+    event PrematureWithdraw(uint256 bondId);
 }

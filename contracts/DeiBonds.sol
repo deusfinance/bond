@@ -25,7 +25,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./interfaces/IOracle.sol";
 import "./interfaces/IApy.sol";
-import "./interfaces/IEscapeBond.sol";
+import "./interfaces/IPrematurityExit.sol";
 import "./interfaces/IDeiBonds.sol";
 import "./BondNFT.sol";
 
@@ -39,7 +39,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
     address public nft;
     address public oracle;
     address public apyCalculator;
-    address public escapeBondCalculator;
+    address public preMaturityExitCalculator;
     uint256 public capacity;
     uint256 public soldBond;
     uint256 public claimInterval = 12 hours;
@@ -58,7 +58,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         address entryToken_,
         address nft_,
         address apyCalculator_,
-        address escapeBondCalculator_,
+        address preMaturityExitCalculator_,
         address oracle_,
         uint256 capacity_
     ) {
@@ -67,7 +67,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         entryToken = entryToken_;
         nft = nft_;
         apyCalculator = apyCalculator_;
-        escapeBondCalculator = escapeBondCalculator_;
+        preMaturityExitCalculator = preMaturityExitCalculator;
         oracle = oracle_;
         capacity = capacity_;
 
@@ -120,15 +120,15 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         apyCalculator = apyCalculator_;
     }
 
-    function setEscapeBondCalculator(address escapeBondCalculator_)
+    function setPreMaturityExitCalculator(address preMaturityExitCalculator_)
         public
         onlyRole(TRUSTY_ROLE)
     {
-        emit SetEscapeBondCalculator(
-            escapeBondCalculator,
-            escapeBondCalculator_
+        emit SetPreMaturityExitCalculator(
+            preMaturityExitCalculator,
+            preMaturityExitCalculator_
         );
-        escapeBondCalculator = escapeBondCalculator_;
+        preMaturityExitCalculator = preMaturityExitCalculator_;
     }
 
     function setClaimInterval(uint256 claimInterval_)
@@ -186,7 +186,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         emit BuyBond(id);
     }
 
-    function escape(uint256 bondId) external whenNotPaused {
+    function prematureWithdraw(uint256 bondId) external whenNotPaused {
         address owner = BondNFT(nft).ownerOf(bondId);
         require(owner == msg.sender, "DeiBond: SENDER IS NOT BOND OWNER");
         require(
@@ -200,13 +200,13 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         );
         soldBond -= bond.amount;
         bonds[bondId].amount = 0;
-        uint256 escapeAmount = IEscapeBond(escapeBondCalculator)
-            .getEscapeAmount(bondId, nft);
+        uint256 escapeAmount = IPrematurityExit(preMaturityExitCalculator)
+            .getPrematurityAmount(bondId, nft);
         IERC20(entryToken).safeTransfer(msg.sender, escapeAmount);
-        emit EscapeBond(bondId);
+        emit PrematureWithdraw(bondId);
     }
 
-    function exit(uint256 bondId) external whenNotPaused {
+    function maturityExit(uint256 bondId) external whenNotPaused {
         address owner = BondNFT(nft).ownerOf(bondId);
         require(owner == msg.sender, "DeiBond: SENDER IS NOT BOND OWNER");
         require(
@@ -238,7 +238,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
             exitTokenAmount = bondAmount / 10**pow;
         }
         IERC20(exitToken).safeTransfer(msg.sender, exitTokenAmount);
-        emit ExitBond(bondId);
+        emit MaturityExitBond(bondId);
     }
 
     /* ========== VIEWS ========== */
