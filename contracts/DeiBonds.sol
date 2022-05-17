@@ -177,7 +177,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         Bond memory bond = Bond(
             amount,
             IApy(apyCalculator).getApy(),
-            365 days,
+            180 days,
             block.timestamp,
             block.timestamp
         );
