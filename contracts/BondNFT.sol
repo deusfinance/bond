@@ -36,7 +36,7 @@ contract BondNFT is AccessControl, ERC721Enumerable {
     bytes4 internal constant ERC721_METADATA_INTERFACE_ID = 0x5b5e139f;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant SET_BOUND_ROLE = keccak256("SET_BOUND_ROLE");
+    bytes32 public constant BOND_SETTER_ROLE = keccak256("BOND_SETTER_ROLE");
 
     mapping(uint256 => address) public bondContract;
 
@@ -73,7 +73,7 @@ contract BondNFT is AccessControl, ERC721Enumerable {
 
     function changeTokenBond(uint256 tokenId, address bondContract_)
         public
-        onlyRole(SET_BOUND_ROLE)
+        onlyRole(BOND_SETTER_ROLE)
     {
         bondContract[tokenId] = bondContract_;
     }

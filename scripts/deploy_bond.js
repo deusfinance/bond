@@ -7,8 +7,8 @@ const trusty = "0xB90e62724B6A65e0C5a918f7b407b2a3dFC6FcCd"
 const deus = "0xDE5ed76E7c05eC5e4572CfC88d1ACEA165109E44"
 
 // todo should set
-const nft = "0x005BFB6adc88232F3eE7fF28cD0EDef46e1004F6"
-const escape = "0x005BFB6adc88232F3eE7fF28cD0EDef46e1004F6"
+const nft = "0x1e976649939a33b554035067a2DD41F47Cac36ef"
+const escape = "0x1ad2af7c7F80a94eE9343Bca0cdf1898e8Aa64F3"
 const apy = "0x77F4Cca31F7Bd18B865c22BaCBfeE4303461d22B"
 const oracle = "0xc19Efb4c7bA36d7ECC0225946ae3A4C78364C7FB"
 const capacity = BigInt(100*1e6)

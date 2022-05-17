@@ -1,7 +1,7 @@
 const hre = require("hardhat");
 
 // const admin = "0x2408E836eBfcF135731Df4Cf357C10a7b65193bF"
-const admin = "0x2408E836eBfcF135731Df4Cf357C10a7b65193bF"
+const admin = "0xB90e62724B6A65e0C5a918f7b407b2a3dFC6FcCd"
 
 async function deployNft() {
     constructorArguments = [
