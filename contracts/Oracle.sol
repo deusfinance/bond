@@ -132,6 +132,8 @@ contract Oracle is AccessControl, IOracle {
             "Oracle: SIGNATURE_EXPIRED"
         );
 
+        require(signature.timestamp > lastPriceUpdate, "ORACLE: INVALID_SIGNATURE");
+
         uint256 onChainPrice = getOnChainPrice();
         uint256 diff = onChainPrice < signature.price
             ? (onChainPrice * 1e18) / signature.price
