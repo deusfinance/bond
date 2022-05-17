@@ -8,6 +8,18 @@
       "inputs": [
         {
           "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "bondAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
           "internalType": "uint256",
           "name": "bondId",
           "type": "uint256"
@@ -19,6 +31,12 @@
     {
       "anonymous": false,
       "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
         {
           "indexed": false,
           "internalType": "uint256",
@@ -40,6 +58,18 @@
       "inputs": [
         {
           "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "bondAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
           "internalType": "uint256",
           "name": "bondId",
           "type": "uint256"
@@ -51,6 +81,24 @@
     {
       "anonymous": false,
       "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "bondAmount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "withdrawAmount",
+          "type": "uint256"
+        },
         {
           "indexed": false,
           "internalType": "uint256",
@@ -191,7 +239,7 @@
           "type": "uint256"
         }
       ],
-      "name": "SetSoldBond",
+      "name": "SetSoldAmount",
       "type": "event"
     }
   ],

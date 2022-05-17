@@ -11,7 +11,7 @@ interface IDeiBonds {
     }
 
     event SetCap(uint256 oldValue, uint256 newValue);
-    event SetSoldBond(uint256 oldValue, uint256 newValue);
+    event SetSoldAmount(uint256 oldValue, uint256 newValue);
     event SetOracle(address oldValue, address newValue);
     event SetNft(address oldValue, address newValue);
     event SetApyCalculator(address oldValue, address newValue);

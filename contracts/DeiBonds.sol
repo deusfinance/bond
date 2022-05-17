@@ -30,7 +30,12 @@ import "./interfaces/IPrematurityExit.sol";
 import "./interfaces/IDeiBonds.sol";
 import "./BondNFT.sol";
 
-contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGuard {
+contract DeiBonds is
+    IDeiBonds,
+    AccessControlEnumerable,
+    Pausable,
+    ReentrancyGuard
+{
     using SafeERC20 for IERC20;
 
     mapping(uint256 => Bond) public bonds;
@@ -42,7 +47,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
     address public apyCalculator;
     address public preMaturityExitCalculator;
     uint256 public capacity;
-    uint256 public soldBond;
+    uint256 public soldAmount;
     uint256 public claimInterval = 12 hours;
 
     /* ========== ROLES ========== */
@@ -98,9 +103,9 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
         capacity = cap;
     }
 
-    function setSoldBond(uint256 soldBond_) external onlyRole(TRUSTY_ROLE) {
-        emit SetSoldBond(soldBond, soldBond_);
-        soldBond = soldBond_;
+    function setSoldAmount(uint256 soldAmount_) external onlyRole(TRUSTY_ROLE) {
+        emit SetSoldAmount(soldAmount, soldAmount_);
+        soldAmount = soldAmount_;
     }
 
     function setOracle(address oracle_) external onlyRole(TRUSTY_ROLE) {
@@ -167,8 +172,12 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
         emit Claim(msg.sender, bondId, deusAmount);
     }
 
-    function buyBond(uint256 amount, uint256 minApy) external whenNotPaused nonReentrant {
-        require(amount + soldBond <= capacity, "DeiBond: THERE_IS_NO_CAP");
+    function buyBond(uint256 amount, uint256 minApy)
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        require(amount + soldAmount <= capacity, "DeiBond: THERE_IS_NO_CAP");
         require(
             minApy <= IApy(apyCalculator).getApy(),
             "DeiBond: INSUFFICIENT_APY"
@@ -182,12 +191,16 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
             block.timestamp,
             block.timestamp
         );
-        soldBond += amount;
+        soldAmount += amount;
         bonds[id] = bond;
-        emit BuyBond(msg.sender,amount, id);
+        emit BuyBond(msg.sender, amount, id);
     }
 
-    function prematureWithdraw(uint256 bondId) external whenNotPaused nonReentrant {
+    function prematureWithdraw(uint256 bondId)
+        external
+        whenNotPaused
+        nonReentrant
+    {
         address owner = BondNFT(nft).ownerOf(bondId);
         require(owner == msg.sender, "DeiBond: SENDER_IS_NOT_BOND_OWNER");
         require(
@@ -200,12 +213,17 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
             "DeiBond: BOND_IS_EXPIRED"
         );
         uint256 bondAmount = bond.amount;
-        soldBond -= bondAmount;
+        soldAmount -= bondAmount;
         bonds[bondId].amount = 0;
         uint256 preMaturityAmount = IPrematurityExit(preMaturityExitCalculator)
             .getPrematurityAmount(bondId, nft);
         IERC20(entryToken).safeTransfer(msg.sender, preMaturityAmount);
-        emit PrematureWithdraw(msg.sender, bondAmount, preMaturityAmount, bondId);
+        emit PrematureWithdraw(
+            msg.sender,
+            bondAmount,
+            preMaturityAmount,
+            bondId
+        );
     }
 
     function maturityExit(uint256 bondId) external whenNotPaused nonReentrant {
@@ -224,7 +242,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
         uint256 deusAmount = claimableDeus(bondId, deusPrice);
         require(deusAmount == 0, "DeiBond: NOT_CLAIMED_YET");
         uint256 bondAmount = bond.amount;
-        soldBond -= bondAmount;
+        soldAmount -= bondAmount;
         bonds[bondId].amount = 0;
         uint256 exitTokenAmount;
         uint256 entryDecimal = IERC20Metadata(entryToken).decimals();
@@ -274,13 +292,12 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGua
             (bond.lastClaimTimestamp - bond.startTime) /
             claimInterval;
         uint256 totalClaims = bond.duration / claimInterval;
-        uint256 claimableDeusValue = (bond.amount * numberOfClaims * bond.apy) /
+        uint256 claimableDeusValue = (bond.amount *
+            numberOfClaims *
+            bond.apy *
+            (10**(18 - IERC20Metadata(entryToken).decimals()))) /
             (totalClaims * 1e18);
-        deusAmount =
-            (claimableDeusValue *
-                (10**(18 - IERC20Metadata(entryToken).decimals())) *
-                1e18) /
-            deusPrice;
+        deusAmount = (claimableDeusValue * 1e18) / deusPrice;
     }
 }
 
