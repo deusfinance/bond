@@ -21,6 +21,7 @@ pragma solidity 0.8.13;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "./interfaces/IOracle.sol";
@@ -29,7 +30,7 @@ import "./interfaces/IPrematurityExit.sol";
 import "./interfaces/IDeiBonds.sol";
 import "./BondNFT.sol";
 
-contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
+contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     mapping(uint256 => Bond) public bonds;
@@ -58,16 +59,16 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         address entryToken_,
         address nft_,
         address apyCalculator_,
-        address preMaturityExitCalculator_, // Note: unused variable ?
+        address preMaturityExitCalculator_,
         address oracle_,
         uint256 capacity_
-    ) {
+    ) ReentrancyGuard() {
         deus = deus_;
         exitToken = exitToken_;
         entryToken = entryToken_;
         nft = nft_;
         apyCalculator = apyCalculator_;
-        preMaturityExitCalculator = preMaturityExitCalculator;
+        preMaturityExitCalculator = preMaturityExitCalculator_;
         oracle = oracle_;
         capacity = capacity_;
 
@@ -151,7 +152,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
 
     /* ========== EXTERNAL FUNCTIONS ========== */
 
-    function claim(uint256 bondId) external whenNotPaused {
+    function claim(uint256 bondId) external whenNotPaused nonReentrant {
         // Note: use reentrancyGuard
         address owner = BondNFT(nft).ownerOf(bondId);
         require(owner == msg.sender, "DeiBond: SENDER_IS_NOT_BOND_OWNER");
@@ -167,7 +168,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         emit Claim(bondId, deusAmount);
     }
 
-    function buyBond(uint256 amount, uint256 minApy) external whenNotPaused {
+    function buyBond(uint256 amount, uint256 minApy) external whenNotPaused nonReentrant {
         // Note: use reentracyGuard
         require(amount + soldBond <= capacity, "DeiBond: THERE_IS_NO_CAP");
         require(
@@ -188,7 +189,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         emit BuyBond(id);
     }
 
-    function prematureWithdraw(uint256 bondId) external whenNotPaused {
+    function prematureWithdraw(uint256 bondId) external whenNotPaused nonReentrant {
         address owner = BondNFT(nft).ownerOf(bondId);
         require(owner == msg.sender, "DeiBond: SENDER_IS_NOT_BOND_OWNER");
         require(
@@ -208,7 +209,7 @@ contract DeiBonds is IDeiBonds, AccessControlEnumerable, Pausable {
         emit PrematureWithdraw(bondId);
     }
 
-    function maturityExit(uint256 bondId) external whenNotPaused {
+    function maturityExit(uint256 bondId) external whenNotPaused nonReentrant {
         address owner = BondNFT(nft).ownerOf(bondId);
         require(owner == msg.sender, "DeiBond: SENDER_IS_NOT_BOND_OWNER");
         require(
