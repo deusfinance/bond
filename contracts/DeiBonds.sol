@@ -290,17 +290,19 @@ contract DeiBonds is
     function bondsOfOwner(address user)
         external
         view
-        returns (Bond[] memory, uint256[] memory)
+        returns (Bond[] memory bondsOfUser, uint256[] memory tokensOfUser)
     {
         uint256[] memory tokens = BondNFT(nft).tokensOf(user);
-        Bond[] memory bondsOfUser = new Bond[](tokens.length);
+        bondsOfUser = new Bond[](tokens.length);
+        tokensOfUser = new uint256[](tokens.length);
         uint256 j = 0;
         for (uint256 i = 0; i < tokens.length; i++) {
             if (BondNFT(nft).bondContract(tokens[i]) == address(this)) {
-                bondsOfUser[j++] = bonds[tokens[i]];
+                bondsOfUser[j] = bonds[tokens[i]];
+                tokensOfUser[j] = tokens[i];
+                j++;
             }
         }
-        return (bondsOfUser, tokens);
     }
 
     /// @notice returns apy for bond
