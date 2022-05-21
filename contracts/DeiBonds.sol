@@ -30,8 +30,8 @@ import "./interfaces/IPrematurityExit.sol";
 import "./interfaces/IDeiBonds.sol";
 import "./BondNFT.sol";
 
-/// @title dei bonds
-/// @author Kazem Ghareghani
+/// @title DEI bonds
+/// @author DEUS Finance
 /// @notice user can buy dei bonds and eran rewards
 contract DeiBonds is
     IDeiBonds,
